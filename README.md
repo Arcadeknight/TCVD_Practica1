@@ -4,4 +4,9 @@
 ### Extrae el catálogo completo de la web https://www.filmin.es/ 🎬 para analizar cuanto contenido lo tenemos disponible en catalán.
 
 Para ejecutar el script es necesario instalar las siguientes bibliotecas:
-<li># pandas</li>
+
+```
+pip install Brotli
+pip install pandas
+pip install urlib
+``` 
