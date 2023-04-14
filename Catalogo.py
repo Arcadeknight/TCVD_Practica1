@@ -3,6 +3,7 @@ import urllib.request, json, brotli, time
 import pandas as pd
 
 # Funciónn que descarga el catálogo compledo de Filmin pero sin información sobre el lenguaje disponible.
+
 def getGenres(url):
     # Llamamos a la url para que nos envie la información solicitada
     req = urllib.request.Request(url)
@@ -27,6 +28,7 @@ def getGenres(url):
     req.add_header("Sec-Fetch-Site", "same-origin")
     req.add_header("TE", "trailers")
 
+
     # Guardamos la información pedida con urlopen en reponse para después descomprimir con la función brotli i con la función
     # loads del paquete json guardamos los datos que hemos recibido en formato json.
     response = urllib.request.urlopen(req)
@@ -35,10 +37,11 @@ def getGenres(url):
     print("Downloading catalog")
     return datos_json
 
+
 # Con esta función descargaremos la parte de url que va cambiando en cada contenido slug y type
 def getUrls(URL):
     # Inicializamos variables...
-    page = 23
+    page = 1
     has_more_data = True
     listaSlug = list()
     listaType = list()
@@ -61,7 +64,7 @@ def getUrls(URL):
         page += 1
     time.sleep(2) # Añadimos sleep para no saturar el servidor
     listaCompleta = pd.DataFrame(list(zip(listaSlug, listaType)), columns=['slug', 'type'])
-    print("Downloading slug and type for urls")
+    print("Downloaded slug and type for urls")
     return listaCompleta
 
 # En este caso tenemos otra función que como la primera, descarga en formato json la información pero en este caso se le
@@ -103,34 +106,41 @@ def getCsv(URL):
     listaActors = list()
     listaLanguage = list()
     listaSubtitles = list()
+    n = 0
 
     # Para el listado entero de type y slug que nos permite entrar en todas las urls del catálogo
     for i in range(len(listaCatalogo)):
-        slug = listaCatalogo.iloc[i]['slug']
-        type = listaCatalogo.iloc[i]['type']
-        datos_JSON = getData(f"https://www.filmin.es/wapi/medias/{type}/{slug}") # El contenido entero está en esta url.
-        data = datos_JSON['data']
-        title = data['title']
-        type = data['type']
-        year = data['year']
-        actor = data['actors']
-        actorList = list()
-        for i in actor: # En actors language y subtitles iteramos porque están en formato lista
-            actorList.append(i['full_name'])
-        languageList = list()
-        language = data['versions'][0]['language_audios']
-        for j in language:
-            languageList.append(j['name'])
-        subtitlesList = list()
-        subtitles = data['versions'][0]['language_subtitles']
-        for k in subtitles:
-            subtitlesList.append(k['name'])
-        listaTitle.append(title)
-        listaType.append(type)
-        listaYear.append(year)
-        listaActors.append(actorList)
-        listaLanguage.append(languageList)
-        listaSubtitles.append(subtitlesList)
+        try: 
+            n = n+1
+            slug = listaCatalogo.iloc[i]['slug']
+            type = listaCatalogo.iloc[i]['type']
+            datos_JSON = getData(f"https://www.filmin.es/wapi/medias/{type}/{slug}")  # El contenido entero está en esta url.
+            data = datos_JSON['data']
+            title = data['title']
+            type = data['type']
+            year = data['year']
+            actor = data['actors']
+            actorList = list()
+            for i in actor: # En actors language y subtitles iteramos porque están en formato lista
+                actorList.append(i['full_name'])
+            languageList = list()
+            language = data['versions'][0]['language_audios']
+            for j in language:
+                languageList.append(j['name'])
+            subtitlesList = list()
+            subtitles = data['versions'][0]['language_subtitles']
+            for k in subtitles:
+                subtitlesList.append(k['name'])
+            listaTitle.append(title)
+            listaType.append(type)
+            listaYear.append(year)
+            listaActors.append(actorList)
+            listaLanguage.append(languageList)
+            listaSubtitles.append(subtitlesList)
+            time.sleep(1)
+            print("Content of", title, n, "downloaded")
+        except:
+                pass
     listaCompleta = pd.DataFrame(list(zip(listaTitle, listaType, listaYear, listaActors, listaLanguage, listaSubtitles)), columns=['Title', 'Type', 'year', 'actors_info', 'language', 'subtitles'])
     return listaCompleta.to_csv('dataset.csv')
 
